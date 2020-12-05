@@ -1,11 +1,6 @@
 # Created by .ignore support plugin (hsz.mobi)
-.gitignore
-.idea/.gitignore
-.idea/checkstyle-idea.xml
-.idea/checkstyleidea-libs/
-.idea/compiler.xml
-.idea/inspectionProfiles/
-.idea/junitgenerator-prj-settings.xml
-.idea/misc.xml
+.idea/*
 study.iml
 target/
+.idea/checkstyleidea.tmp/
+.idea/setting.xml
