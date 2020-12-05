@@ -43,5 +43,19 @@ public class LockSupportTest {
         thread1.start();
         thread2.start();
         thread3.start();
+
+        while (true) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("t1: " + thread1.getState());
+            System.out.println("t2: " + thread2.getState());
+            System.out.println("t3: " + thread3.getState());
+            if (thread1.getState().equals(Thread.State.TERMINATED) && thread2.getState().equals(Thread.State.TERMINATED) && thread3.getState().equals(Thread.State.TERMINATED)) {
+                break;
+            }
+        }
     }
 }

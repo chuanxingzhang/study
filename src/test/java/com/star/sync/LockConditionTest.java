@@ -1,8 +1,8 @@
 package com.star.sync;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -18,20 +18,32 @@ public class LockConditionTest {
         Condition numbersCondition = lock.newCondition();
         Condition lettersCondition = lock.newCondition();
         Condition capitalsCondition = lock.newCondition();
+        AtomicInteger times = new AtomicInteger(1);
         int[] numbers = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         String[] letters = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
         String[] capitals = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
 
         Thread t1 = new Thread(() -> {
             lock.lock();
+            System.out.println(Thread.currentThread().getName() + "获取了锁");
+            Boolean fistIsThree = false;
+            if (times.intValue() != 3) {
+                times.incrementAndGet();
+            } else {
+                fistIsThree = true;
+            }
             for (int i = 0; i < numbers.length; i++) {
-                System.out.println("数字：" + numbers[i]);
                 try {
-                    lettersCondition.signal();
-                    numbersCondition.await();
+                    if (fistIsThree) {
+                        fistIsThree = false;
+                    } else {
+                        numbersCondition.await();
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                System.out.println("数字：" + numbers[i]);
+                lettersCondition.signal();
             }
             lettersCondition.signal();
             capitalsCondition.signal();
@@ -41,14 +53,21 @@ public class LockConditionTest {
         });
         Thread t2 = new Thread(() -> {
             lock.lock();
+            System.out.println(Thread.currentThread().getName() + "获取了锁");
+            if (times.intValue() == 3) {
+                numbersCondition.signal();
+            } else {
+                times.incrementAndGet();
+            }
             for (int i = 0; i < letters.length; i++) {
-                System.out.println("小写字母" + letters[i]);
                 try {
-                    capitalsCondition.signal();
                     lettersCondition.await();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                System.out.println("小写字母" + letters[i]);
+                capitalsCondition.signal();
+
                 numbersCondition.signal();
                 capitalsCondition.signal();
             }
@@ -57,26 +76,36 @@ public class LockConditionTest {
         });
         Thread t3 = new Thread(() -> {
             lock.lock();
+            System.out.println(Thread.currentThread().getName() + "获取了锁");
+            if (times.intValue() == 3) {
+                numbersCondition.signal();
+            } else {
+                times.incrementAndGet();
+            }
             for (int i = 0; i < capitals.length; i++) {
-                System.out.println("大写字母：" + capitals[i]);
                 try {
-                    numbersCondition.signal();
                     capitalsCondition.await();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                System.out.println("大写字母：" + capitals[i]);
+                numbersCondition.signal();
+
             }
             numbersCondition.signal();
             lettersCondition.signal();
             System.out.println("t3结束");
             lock.unlock();
         });
+        t1.setName("t1");
+        t2.setName("t2");
+        t3.setName("t3");
         t1.start();
         t2.start();
         t3.start();
         while (true) {
             try {
-                Thread.sleep(10000);
+                Thread.sleep(3000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
