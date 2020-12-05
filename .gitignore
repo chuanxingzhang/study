@@ -2,3 +2,4 @@
 .idea
 study.iml
 .idea/*
+target/
